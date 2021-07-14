@@ -1,0 +1,22 @@
+version: '2.2'
+services:
+  cache:
+    image: memcached:1.6.9-alpine
+    ports:
+      - "11211:11211"
+  overlord:
+    build: .
+    ports:
+      - "8089:8089"
+    volumes:
+      - "./src:/srv/app"
+    command: "locust -f /srv/app/locustfile.py --master --master-bind-port=5557 --host cache"
+  minion:
+    depends_on:
+      - overlord
+    build: .
+    scale: 10
+    volumes:
+      - "./src:/srv/app"
+    command: "locust -f /srv/app/locustfile.py --worker --master-host=overlord --master-port=5557" 
+
